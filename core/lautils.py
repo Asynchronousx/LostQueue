@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pytesseract
 from math import ceil
-from wutils import WindowsManager
+from .wutils import WindowsManager
 
 class LostArkManager():
 
