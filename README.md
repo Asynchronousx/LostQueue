@@ -41,4 +41,4 @@ To run those file from scratch you'll need:
 - The game actually runs only in Borderless mode (Windowed is not supported). 
 - Used playsound to run an audio when logged in but strangely dont work 
 - Sometimes the overlay crashes due to some strange logic cases i didn't manage to fix (rarely happens)
-- THE EXE IS 144MB AND WON'T EMBED ANY IMAGE WTF PYINSTALLER!?!?!!
+- THE EXE IS 144MB and wont embed any external asset wtf pyinstaller lmao?!
