@@ -24,3 +24,20 @@ Also, the process is pretty simple too:
 - python LostQueue.py
 
 NOTE: Be sure to have installed Tesseract in your env and modify the `pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'` in `lautils.py` into your actual path to Tesseract
+
+# Requirements
+To run those file from scratch you'll need: 
+- PyTesseract
+- PyQt5
+- Numpy
+- OpenCV 
+- PIL
+- win32ui, win32gui, win32com
+- pyautogui
+- playsound
+
+# Known Problems
+- When Tesseract doesn't recognize well the first digit at start, better to restart the overlay
+- The game actually runs only in Borderless mode (Windowed is not supported). 
+- Used playsound to run an audio when logged in but strangely dont work 
+- Sometimes the overlay crashes due to some strange logic cases i didn't manage to fix (rarely happens)
