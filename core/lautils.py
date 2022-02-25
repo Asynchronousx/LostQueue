@@ -8,10 +8,10 @@ from .wutils import WindowsManager
 
 class LostArkManager():
 
-    def __init__(self):
+    def __init__(self, screen_res):
 
         self.wman = WindowsManager()
-        self.screen_res = self.wman.get_process_screensize(name='lost ark')
+        self.screen_res = screen_res
         self.delta_t = 20
         self.last_avg_time = 99999
         self.last_valid_queue = 0
@@ -27,36 +27,45 @@ class LostArkManager():
         # better images, and accurate queue inference.
         im, w, h = self.wman.get_process_snap('lost ark')
 
+        # Assure h and w match current monitor resolution
+        if h != self.screen_res[1]: h = self.screen_res[1]
+        if w != self.screen_res[0]: w = self.screen_res[0]
+
         # Convert the PIL image to opencv
         im = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+
+        # Crop (or pad) the image to the correct resolution if PIL
+        # failed to assert the size of the windows (may happens when using downscalign
+        # or upscaling in resolution)
+        im = im[:h, :w]
 
         # Crop the rectangle box region
         rect = im[h//2:h//2+100, w//2-50:w//2+200]
 
-
         # Handle resolution:
         if self.screen_res[1] == 720:
 
-            # CASE 720P (16:9 WINDOWED)
-            queue_img = rect[40:55, 85:115]
+            # CASE 720P (borderless)
+            queue_img = rect[0:20, 78:120]
 
         elif self.screen_res[1] == 1080:
 
-            # CASE 1080P (16:9 WINDOWED)
-            queue_img = rect[43:63, 96:147]
+            # CASE 1080P (borderless)
+            queue_img = rect[0:30, 93:160]
 
         elif self.screen_res[1] == 1440:
 
-            # CASE 1440P (16:9 WINDOWED)
-            queue_img = rect[40:80, 110:180]
+            # CASE 1440P (borderless)
+            queue_img = rect[5:35, 107:185]
 
         elif self.screen_res[1] == 2160:
 
-            # CASE 2160P (16:9 WINDOWED)
-            queue_img = rect[40:90, 140:250]
+            # CASE 2160P (borderless)
+            queue_img = rect[10:50, 135:250]
 
+        else:
 
-        # TODO: OTHER RESOLUTIONS
+            exit(0)
 
         # LESS ACCURATE
         """# Filtering out some noise with binarization and image processing
@@ -174,7 +183,7 @@ class LostArkManager():
             # Compute the users for a delta_t decrease in the queue
             # (since the refresh is every 20 sec, cur_queue - last_queue represent
             # the decrease in the queue on 20 sec basis)
-            delta_decrease = last_queue - cur_queue
+            delta_decrease = abs(last_queue - cur_queue)
 
             # append the value to the array
             self.avg_queue_decreases = np.append(self.avg_queue_decreases, delta_decrease)
