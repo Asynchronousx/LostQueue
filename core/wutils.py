@@ -29,20 +29,25 @@ class WindowsManager():
 
         # Getting the wanted process by analyzing the plist built
         # at init
-        process = [(p, n) for (p, n) in self.plist if name in n.lower()]
-        return process
-
-    def get_process_screen(self, name):
-
-        # Get process info based on name
-        process_info = self.get_process_ID(name)
+        process_info = [(p, n) for (p, n) in self.plist if name in n.lower()]
 
         # Handle error: if no process with the given name is found, return None
+        # both for name and hwnd
         if len(process_info) == 0:
-            return None, None, None
+            return None, None
 
-        # Extract the hwnd from the tuple
-        hwnd = process_info[0][0]
+        # return the process hwnd and name
+        return process_info[0][0], process_info[0][1]
+
+    def get_process_screensize(self, name):
+
+        # Get the process id based on the name
+        hwnd, _ = self.get_process_ID(name)
+
+        # Handle error: if no process id with the given name is found, return None
+        # for w,h
+        if not hwnd:
+            return None, None
 
         # Set the correct DPI for the process
         windll.user32.SetProcessDPIAware()
@@ -52,8 +57,22 @@ class WindowsManager():
         w = right - left
         h = bot - top
 
-        # TODO: CHECK SCREEN CONSTRAINT!!!
+        # Return width and height of the process
+        return (w,h)
 
+    def get_process_snap(self, name):
+
+        # Get process info based on name
+        hwnd, _ = self.get_process_ID(name)
+
+        # Handle error: if no process with the given name is found, return None
+        # for image, w, h
+        if not hwnd:
+            return None, None, None
+
+        # Get w and h of the process
+        w, h = self.get_process_screensize(name)
+        
         # Process window in background
         hwndDC = win32gui.GetWindowDC(hwnd)
         mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
