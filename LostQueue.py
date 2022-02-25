@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.res_h = h
 
         # Instanciating a lost ark manager
-        self.lamanager = LostArkManager()
+        self.lamanager = LostArkManager(screen_res=(w,h))
 
         # Try to fetch queue status: if returns some error,
         # assign an empty string
@@ -62,10 +62,10 @@ class MainWindow(QMainWindow):
         print("Current Resolution: {}x{}".format(w,h))
         print("Current Game resolution: {}x{}".format(self.lamanager.screen_res[0], self.lamanager.screen_res[1]))
         if h <= 768:
-            font_size =  12
+            font_size =  14
             scale_factor = 0.5
-            self.overlay_w = 310
-            self.overlay_h = 110
+            self.overlay_w = 280
+            self.overlay_h = 140
         elif h <= 1080:
             scale_factor = 1
             font_size = 16
@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
 
     def update_label(self):
 
-        # Get cur queue from the Lost Ark Manager
+        # Try to get cur queue status, if some error returns, assign an empty string
         try:
             cur_queue = self.lamanager.get_queue_status()
         except:
@@ -152,10 +152,13 @@ class MainWindow(QMainWindow):
         if self.queue_status != '':
             if int(self.queue_status) < 100 and cur_queue == '':
                 self.queue_label.setVisible(False)
-                self.player_label.setText('LOGGED IN!')
+                self.player_label.setText('   LOGGED IN!   ')
                 self.time_label.setVisible(False)
-                self.update_timer.start(7000)
-                playsound('assets/logged.wav')
+
+                # Playsound strangely wont work TODO: Understand whY!
+                #self.update_timer.start(7000)
+                #playsound('./assets/logged.wav')
+
                 return
 
         # Check if we're synchronized with the client: we achieve that comapring
