@@ -1,19 +1,44 @@
 # coding: utf-8
+
+import os
 import sys
 import pyautogui
+
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import *
+from playsound import playsound
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import QCursor
 from core.lautils import LostArkManager
+
+# Function that handles the background image load inside the exe
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        # Window size
+        # Get w,h of the screen (ie: 1920x1080)
+        w, h = pyautogui.size()
+        self.res_w = w
+        self.res_h = h
+
         # Instanciating a lost ark manager
         self.lamanager = LostArkManager()
-        self.queue_status = self.lamanager.get_queue_status()
+
+        # Try to fetch queue status: if returns some error,
+        # assign an empty string
+        try:
+            self.queue_status = self.lamanager.get_queue_status()
+        except:
+            self.queue_status = ''
 
         # Right click handling
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -31,16 +56,11 @@ class MainWindow(QMainWindow):
         self.setWindowOpacity(0.8)
 
 
-        # Window size
-        # Get w,h of the screen (ie: 1920x1080)
-        w, h = pyautogui.size()
-        self.res_w = w
-        self.res_h = h
-
         # Handle resolution scaling
         scale_factor = 0
         font_size = 0
         print("Current Resolution: {}x{}".format(w,h))
+        print("Current Game resolution: {}x{}".format(self.lamanager.screen_res[0], self.lamanager.screen_res[1]))
         if h <= 768:
             font_size =  12
             scale_factor = 0.5
@@ -48,24 +68,21 @@ class MainWindow(QMainWindow):
             self.overlay_h = 110
         elif h <= 1080:
             scale_factor = 1
-            font_size = 13
-            self.overlay_w = 350
-            self.overlay_h = 140
-        elif h <= 1440:
-            self.overlay_w = 430
-            self.overlay_h = 170
             font_size = 16
+            self.overlay_w = 300
+            self.overlay_h = 150
+        elif h <= 1440:
+            self.overlay_w = 380
+            self.overlay_h = 190
+            font_size = 18
             scale_factor = 2
         elif h <= 2160:
             self.overlay_w = 530
-            self.overlay_h = 270
-            font_size = 16
+            self.overlay_h = 265
+            font_size = 19
             scale_factor = 3
         else:
-            self.overlay_w = 500
-            self.overlay_h = 130
-            font_size = 14
-            scale_factor = 5
+            exit(0)
 
         # Widget creation: we do assign a name to this external frame since we do
         # want to apply the stylesheet only to the external frame and not all the
@@ -79,9 +96,8 @@ class MainWindow(QMainWindow):
         # Stylesheet creation and application
         stylesheet = """
         QWidget#ExternalFrame {
-            border-image: url("background.jpg");
+            border-image: url("assets/background.jpg");
             background-repeat: no-repeat;
-            border : 3px solid black;
             border-radius: 20px;
         }
         """
@@ -100,13 +116,13 @@ class MainWindow(QMainWindow):
 
         # Creating label
         if self.queue_status == '':
-            queue_text = '    Not in queue!    '
-            time_text = '    Please choose a server.    '
-            player_text = '    And try again.    '
+            queue_text = ' Not in queue. '
+            player_text = ' Please choose a server '
+            time_text = ' And try again! '
         else:
-            queue_text = '  Position in Queue: {}  '.format(self.queue_status)
-            player_text = '  Players per minute: Synch..    '
-            time_text = '  Time to get in: Synch..  '
+            queue_text = ' Position in Queue: {}'.format(self.queue_status)
+            player_text = ' Players per minute: Synch.. '
+            time_text = ' Time left: Synch.. '
 
 
         self.queue_label = self.create_label('Lato', font_size, 10, 90+(scale_factor), queue_text)
@@ -125,7 +141,11 @@ class MainWindow(QMainWindow):
     def update_label(self):
 
         # Get cur queue from the Lost Ark Manager
-        cur_queue = self.lamanager.get_queue_status()
+        try:
+            cur_queue = self.lamanager.get_queue_status()
+        except:
+            cur_queue = ''
+
 
         # Check if we´ve logged in: if the last queue status was lesser than 15,
         # and the new status is empty that means we´ve finally managed to get in the game.
@@ -134,6 +154,8 @@ class MainWindow(QMainWindow):
                 self.queue_label.setVisible(False)
                 self.player_label.setText('LOGGED IN!')
                 self.time_label.setVisible(False)
+                self.update_timer.start(7000)
+                playsound('assets/logged.wav')
                 return
 
         # Check if we're synchronized with the client: we achieve that comapring
@@ -151,7 +173,7 @@ class MainWindow(QMainWindow):
         # have none values or empty string.
         # If the queue status is empy, that means we do not have information yet.
         if self.queue_status == '':
-            time_text = '  Time to get in: Computing..  '
+            time_text = 'Time left: Computing..'
         else:
 
             # Get the avg time from the manager
@@ -159,9 +181,9 @@ class MainWindow(QMainWindow):
 
             # We can have the cases in which avg time is None (failed to fetch data).
             if not avg_time:
-                time_text =  '  Time to get in: {}  '.format('Recomputing..')
+                time_text =  'Time to left: {}'.format('Recomputing..')
             else:
-                time_text =  '  Time to get in: {} minutes  '.format(avg_time)
+                time_text =  'Time left: {} minutes'.format(avg_time)
 
         # Set the time label with the appropriate text
         self.time_label.setText(time_text)
@@ -171,19 +193,30 @@ class MainWindow(QMainWindow):
         # Set the last queue if present or display a message.
         if cur_queue == '':
             if self.queue_status != '':
-                if len(self.lamanager.avg_queue_decreases) != 0:
-                    self.player_label.setText('  Players per minute: {}  '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
-                    self.queue_label.setText('  Position in queue: {}  '.format(int(self.queue_status)-int(self.lamanager.avg_queue_decreases.mean())))
+                if self.lamanager.avg_queue_decreases.mean() != None:
+                    try:
+                        self.player_label.setText(' Players per minute: {} '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
+                        self.queue_label.setText(' Position in queue: {} '.format(int(self.queue_status)-int(self.lamanager.avg_queue_decreases.mean())))
+                    except:
+                        self.player_label.setText(' Validating. Please wait.. ')
+                        self.queue_label.setText(' Validating. Please wait.. ')
                 else:
-                    self.queue_label.setText('  Validating. Please wait..  ')
-                    self.player_label.setText('  Validating. Please wait..  ')
+                    self.queue_label.setText(' Validating. Please wait.. ')
+                    self.player_label.setText(' Validating. Please wait.. ')
 
             else:
-                self.queue_label.setText('  Validating. Please wait..  ')
-                self.player_label.setText('  Players per minute: {}  '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
+                self.queue_label.setText(' Validating. Please wait.. ')
+                try:
+                    self.player_label.setText(' Players per minute: {} '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
+                except:
+                    self.player_label.setText(' Validating. Please wait.. ')
         else:
-            self.queue_label.setText('  Position in queue: {}  '.format(cur_queue))
-            self.player_label.setText('  Players per minute: {}  '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
+            self.queue_label.setText(' Position in queue: {} '.format(cur_queue))
+            try:
+                self.player_label.setText(' Players per minute: {} '.format(int(self.lamanager.avg_queue_decreases.mean()*3)))
+            except:
+                self.player_label.setText(' Validating. Please wait.. ')
+
 
 
 
@@ -202,15 +235,14 @@ class MainWindow(QMainWindow):
         """
 
         label = QLabel('', self)
-        label.setScaledContents(True)
         label.setText(text)
         label.setFont(QtGui.QFont(fontname, fontsize))
-        label.adjustSize()
-        label.move(x,y)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setScaledContents(True)
         label.setStyleSheet(
             """ QLabel {
-            background-color: rgba(187, 194, 194, 220);;
-            border-radius:15px;
+            background-color: rgba(187, 194, 194, 220);
+            border-radius: 10px;
             }
             """
         )
@@ -255,7 +287,6 @@ class MainWindow(QMainWindow):
 
         self.moveFlag = False
         self.setCursor(Qt.CrossCursor)
-
 
 if __name__ == '__main__':
 
