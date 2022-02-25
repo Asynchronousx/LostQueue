@@ -1,5 +1,4 @@
 # Class that takes care of managing the LostArk queue.
-
 import re
 import cv2
 import numpy as np
@@ -9,16 +8,16 @@ from .wutils import WindowsManager
 
 class LostArkManager():
 
-    def __init__(self, screen_res=(1920,1080)):
+    def __init__(self):
 
-        self.screen_res = screen_res
+        self.wman = WindowsManager()
+        self.screen_res = self.wman.get_process_screensize(name='lost ark')
         self.delta_t = 20
         self.last_avg_time = 99999
         self.last_valid_queue = 0
         self.avg_times = np.array([])
         self.avg_queue_decreases = np.array([])
         self.queue_tolerance = 100
-        self.wman = WindowsManager()
         pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
     def get_queue_image(self):
@@ -26,30 +25,36 @@ class LostArkManager():
         # Extract queue rectangle box from the image
         # NOTE: Precision may vary on screen resolution: higher one produces
         # better images, and accurate queue inference.
-        im, w, h = self.wman.get_process_screen('lost ark')
+        im, w, h = self.wman.get_process_snap('lost ark')
 
         # Convert the PIL image to opencv
         im = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
 
         # Crop the rectangle box region
-        rect = im[h//2:h//2+100, w//2-50:w//2+100]
+        rect = im[h//2:h//2+100, w//2-50:w//2+200]
 
 
         # Handle resolution:
         if self.screen_res[1] == 720:
 
-            # CASE 720P (16:9)
+            # CASE 720P (16:9 WINDOWED)
             queue_img = rect[40:55, 85:115]
 
         elif self.screen_res[1] == 1080:
 
-            # CASE 1080P (16:9)
+            # CASE 1080P (16:9 WINDOWED)
             queue_img = rect[43:63, 96:147]
 
-        else:
+        elif self.screen_res[1] == 1440:
 
-            # If no resolution is supported, return the whole image
-            queue_img = rect
+            # CASE 1440P (16:9 WINDOWED)
+            queue_img = rect[40:80, 110:180]
+
+        elif self.screen_res[1] == 2160:
+
+            # CASE 2160P (16:9 WINDOWED)
+            queue_img = rect[40:90, 140:250]
+
 
         # TODO: OTHER RESOLUTIONS
 
@@ -89,6 +94,7 @@ class LostArkManager():
         if len(self.avg_queue_decreases) >= 1 and clean_num != '':
             clean_num, _, _ = self.handle_wrong_pred(clean_num, None)
             clean_num = int(clean_num)
+
         # Return the number
         return clean_num
 
@@ -150,6 +156,8 @@ class LostArkManager():
         print('Avg time before removing outliers and windowing: {}'.format(self.avg_times))
         self.avg_times = self.remove_outliers(self.avg_times)
         print('Avg time after removing outliers and windowing: {}'.format(self.avg_times))
+        print('----------------------------')
+
 
         return round(self.avg_times.mean())
 
@@ -191,6 +199,7 @@ class LostArkManager():
             # correct range.
             delta_decrease = abs(last_queue - cur_queue)
 
+            print('----------------------------')
             print('Before correction: Cur {} - Last {} - Delta {} '.format(cur_queue, last_queue, delta_decrease))
 
             # If the delta_decrease is lesser than a certain tolerance, that means we
@@ -217,7 +226,7 @@ class LostArkManager():
         print('Before correction: Cur {} - Last {} - Delta {} '.format(cur_queue, last_queue, delta_decrease))
 
         # Once here, we've (hopefully) corrected our values; return everything
-        return cur_queue, last_queue, delta_decrease
+        return round(cur_queue), round(last_queue), round(delta_decrease)
 
     def remove_outliers(self, array):
 
