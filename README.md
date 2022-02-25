@@ -38,7 +38,7 @@ To run those file from scratch you'll need:
 
 # Known Problems
 - When Tesseract doesn't recognize well the first digit at start, better to restart the overlay
-- The game actually runs only in Borderless mode (Windowed is not supported). 
+- The game actually needs to run only in Borderless mode (Windowed is not supported). 
 - Used playsound to run an audio when logged in but strangely dont work 
 - Sometimes the overlay crashes due to some strange logic cases i didn't manage to fix (rarely happens)
 - THE EXE IS 144MB and wont embed any external asset wtf pyinstaller lmao?!
