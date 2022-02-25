@@ -11,7 +11,7 @@ Since we currently do not have any APIs from the game itself, the pipeline imple
 # Usage
 The usage is pretty straightforward and could be done in two ways:
 
-## Release 
+## From Release 
 Download the .exe file from the release section and follow this steps: 
 - Open the game with your desired resolution: actually supported: 720p, 1080p, 1440p, 2160p BORDERLESS!
 - Queue into a server
