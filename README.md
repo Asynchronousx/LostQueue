@@ -2,7 +2,7 @@
 A simple overlay for LostArk that shows information about your queue status and time left while tabbed out of the game.<br>
 
 <p align="center">
-  <img src="https://preview.redd.it/syb4jtng0uj81.png?width=632&format=png&auto=webp&s=b0d612c0958b1041729f64324df068a58bd101bf" width="256 />
+  <img src="https://preview.redd.it/syb4jtng0uj81.png?width=632&format=png&auto=webp&s=b0d612c0958b1041729f64324df068a58bd101bf" width="512 />
 </p>
 
 ![alt text](https://preview.redd.it/syb4jtng0uj81.png?width=632&format=png&auto=webp&s=b0d612c0958b1041729f64324df068a58bd101bf)
