@@ -39,7 +39,8 @@ class LostArkManager():
         # or upscaling in resolution)
         im = im[:h, :w]
 
-        # Crop the rectangle box region
+        # Crop the rectangle box region: all the coordinates have been found optimally 
+        # by trial and error.
         rect = im[h//2:h//2+100, w//2-50:w//2+200]
 
         # Handle resolution:
