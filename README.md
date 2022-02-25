@@ -12,7 +12,7 @@ Since we currently do not have any APIs from the game itself, the pipeline imple
 The usage is pretty straightforward and could be done in two ways:
 
 ## From Release 
-Download the .exe file from the release section ([here])(https://github.com/Asynchronousx/LostQueue/releases) and follow this steps: 
+Download the .exe file from the release section ([here](https://github.com/Asynchronousx/LostQueue/releases)) and follow this steps: 
 - Open the game with your desired resolution: actually supported: 720p, 1080p, 1440p, 2160p BORDERLESS!
 - Queue into a server
 - Alt+Tab and open the .exe file to start the overlay 
