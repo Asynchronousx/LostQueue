@@ -39,7 +39,7 @@ class LostArkManager():
         # or upscaling in resolution)
         im = im[:h, :w]
 
-        # Crop the rectangle box region: all the coordinates have been found optimally 
+        # Crop the rectangle box region: all the coordinates have been found optimally
         # by trial and error.
         rect = im[h//2:h//2+100, w//2-50:w//2+200]
 
@@ -62,7 +62,7 @@ class LostArkManager():
         elif self.screen_res[1] == 2160:
 
             # CASE 2160P (borderless)
-            queue_img = rect[10:50, 135:250]
+            queue_img = rect[10:50, 145:250]
 
         else:
 
@@ -80,8 +80,14 @@ class LostArkManager():
         final = cv2.cvtColor(eroded, cv2.COLOR_BGR2GRAY)"""
 
         # Converting to grayscale and dilating to better recognize digits
-        queue_img = cv2.cvtColor(queue_img, cv2.COLOR_BGR2GRAY)
-        queue_img = cv2.dilate(queue_img, (5,5), iterations=1)
+        if self.screen_res[1] != 2160:
+            queue_img = cv2.cvtColor(queue_img, cv2.COLOR_BGR2GRAY)
+            queue_img = cv2.dilate(queue_img, (2,2), iterations=1)
+            _, queue_img = cv2.threshold(queue_img, 60, 255, cv2.THRESH_BINARY_INV)
+
+        else:
+            # IF 4K, binarize without dilating: quality is good enough.
+            _, queue_img = cv2.threshold(queue_img, 127, 255, cv2.THRESH_BINARY_INV)
 
         # return
         return queue_img
@@ -94,7 +100,7 @@ class LostArkManager():
         # Get the string queue number
         q_num = pytesseract.image_to_string(queue,
                                             lang='eng',
-                                            config='--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789')
+                                            config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
 
         # Clean the string from special characters
         clean_num = re.sub('\W+','', q_num)
